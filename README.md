@@ -70,4 +70,4 @@ npx react-native run-ios
 
 - Live reload
 
-Press ctrl+M to see the menu. Click on "Enable live Reload".
+The emulator has a live reload feature. To enable it, focus on your emulator and press ctrl+M to open a menu. On this menu click on "Enable live Reload".
