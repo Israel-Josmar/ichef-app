@@ -1,32 +1,34 @@
-import React, { useState } from 'react'
-import { StyleSheet, View, Text, Button } from 'react-native'
+import React from 'react'
+import { useQuery } from '@apollo/react-hooks'
+import { gql } from 'apollo-boost'
+import { FlatList, Text } from 'react-native'
+import { CardDish } from './components'
 
-const isHermes = () => String(global.HermesInternal != null)
-
-const inc = value => value + 1
+const QUERY_DISHES = gql`
+  query GetDishes {
+    dishes {
+      id
+      name
+      category
+      imageUrl
+      description
+    }
+  }
+`
 
 const App = () => {
-  const [count, setCount] = useState(0)
+  const { loading, error, data } = useQuery(QUERY_DISHES)
 
-  const handleIncreaseCount = () => {
-    setCount(inc)
-  }
+  if (loading) return <Text>Loading...</Text>
+  if (error) return <Text>Error :( -> {JSON.stringify(error, null, 2)}</Text>
 
   return (
-    <View style={styles.main}>
-      <Text>Hermes engine: {isHermes()}</Text>
-      <Text>count {count}!</Text>
-      <Button onPress={handleIncreaseCount} title="Increase count" />
-    </View>
+    <FlatList
+      keyExtractor={item => item.id}
+      data={data.dishes}
+      renderItem={({ item }) => <CardDish key={item.id} dish={item} />}
+    />
   )
 }
-
-const styles = StyleSheet.create({
-  main: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-})
 
 export default App
