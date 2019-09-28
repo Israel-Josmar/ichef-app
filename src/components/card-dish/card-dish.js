@@ -3,7 +3,14 @@ import PropTypes from 'prop-types'
 import { StyleSheet, View } from 'react-native'
 import { Avatar, Card, Paragraph } from 'react-native-paper'
 
-const CardDish = ({ dish: { name, category, imageUrl, description } }) => {
+const CardDish = ({
+  dish: {
+    name,
+    category,
+    skip: { imageUrl },
+    description,
+  },
+}) => {
   return (
     <View style={styles.container}>
       <Card>
