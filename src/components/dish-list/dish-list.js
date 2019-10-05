@@ -20,7 +20,7 @@ import { gql } from 'apollo-boost'
 const QUERY_DISHES = gql`
   query GetDishes($after: String) {
     skip: project(fullPath: "inkscape/inkscape") {
-      dishes: issues(first: 3, after: $after) {
+      dishes: issues(first: 100, after: $after) {
         pageInfo {
           endCursor
           hasNextPage
@@ -75,24 +75,39 @@ const DishList = props => {
               after: data.skip.dishes.pageInfo.endCursor,
             },
             updateQuery: (previousResult, { fetchMoreResult }) => {
-              const newEdges = fetchMoreResult.skip.dishes.edges
-              const pageInfo = fetchMoreResult.skip.dishes.pageInfo
-              return newEdges.length
-                ? {
-                    skip: {
-                      dishes: {
-                        __typename: previousResult.skip.dishes.__typename,
-                        edges: [...previousResult.skip.dishes.edges, ...newEdges],
-                        pageInfo,
-                      },
-                      __typename: previousResult.skip.__typename,
-                    },
-                  }
-                : previousResult
+              // const newEdges = fetchMoreResult.skip.dishes.edges
+              // const pageInfo = fetchMoreResult.skip.dishes.pageInfo
+              //
+              // if (!newEdges.length) {
+              //   return previousResult
+              // }
+              //
+              // return {
+              //   skip: {
+              //     dishes: {
+              //       __typename: previousResult.skip.dishes.__typename,
+              //       edges: [...previousResult.skip.dishes.edges, ...newEdges],
+              //       pageInfo,
+              //     },
+              //     __typename: previousResult.skip.__typename,
+              //   },
+              // }
+
+              if (!fetchMoreResult) return previousResult
+
+              fetchMoreResult.skip.dishes.edges = [
+                ...previousResult.skip.dishes.edges,
+                ...fetchMoreResult.skip.dishes.edges,
+              ]
+
+              return fetchMoreResult
             },
           })
         }
         onEndReachedThreshold={0.1}
+        // maxToRenderPerBatch={100}
+        // updateCellsBatchingPeriod={10}
+        // windowSize={100}
       />
     </View>
   )

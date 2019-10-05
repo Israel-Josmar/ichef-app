@@ -37,7 +37,7 @@ CardDish.propTypes = {
   }),
 }
 
-export default CardDish
+export default React.memo(CardDish)
 
 const styles = StyleSheet.create({
   container: {
