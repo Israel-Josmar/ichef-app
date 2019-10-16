@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import PropTypes from 'prop-types'
-import { FlatList, Picker, View, Text } from 'react-native'
+import { ActivityIndicator, FlatList, View, Text } from 'react-native'
+import { Searchbar } from 'react-native-paper'
 import { CardDish } from '../card-dish'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
@@ -19,8 +20,8 @@ import { gql } from 'apollo-boost'
 
 const QUERY_DISHES = gql`
   query GetDishes($after: String) {
-    skip: project(fullPath: "inkscape/inkscape") {
-      dishes: issues(first: 100, after: $after) {
+    skip: project(fullPath: "gitlab-org/gitlab") {
+      dishes: issues(first: 5, after: $after) {
         pageInfo {
           endCursor
           hasNextPage
@@ -44,73 +45,70 @@ const QUERY_DISHES = gql`
 `
 
 const DishList = props => {
-  const [category, setCategory] = useState(null)
+  const refContainer = useRef(null)
+  const [searchQuery, setSearchQuery] = useState(null)
+  const [showSearch, setShowSearch] = useState(null)
   const { loading, error, data, fetchMore } = useQuery(QUERY_DISHES)
+  const endCursor = data && data.skip && data.skip.dishes.pageInfo.endCursor
 
-  function handleCategoryChange(category) {
-    setCategory(category)
-  }
-  if (loading) return <Text>Loading...</Text>
+  if (loading)
+    return (
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          alignContent: 'center',
+        }}
+      >
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    )
   if (error) return <Text>Error :( -> {JSON.stringify(error, null, 2)}</Text>
+
+  const blah = () => console.log(refContainer.current.isFocused())
 
   return (
     <View style={{ flex: 1 }}>
-      <Picker
-        selectedValue={category}
-        style={{ height: 50, width: 200 }}
-        onValueChange={itemValue => handleCategoryChange(itemValue)}
-      >
-        <Picker.Item label="Todos" />
-        <Picker.Item label="Lanche" value="Lanche" />
-        <Picker.Item label="Italiano" value="Italiano" />
-      </Picker>
+      <Searchbar
+        placeholder="Prato ou chef"
+        ref={refContainer}
+        onChangeText={query => setSearchQuery(query)}
+        onIconPress={blah}
+        value={searchQuery}
+      />
       <FlatList
         keyExtractor={item => item.node.id}
         data={data.skip.dishes.edges}
-        renderItem={({ item }) => <CardDish key={item.node.id} dish={item.node} />}
-        onEndReached={() =>
-          fetchMore({
+        renderItem={renderItem}
+        onEndReached={() => {
+          return fetchMore({
             query: QUERY_DISHES,
             variables: {
-              after: data.skip.dishes.pageInfo.endCursor,
+              after: endCursor,
             },
-            updateQuery: (previousResult, { fetchMoreResult }) => {
-              // const newEdges = fetchMoreResult.skip.dishes.edges
-              // const pageInfo = fetchMoreResult.skip.dishes.pageInfo
-              //
-              // if (!newEdges.length) {
-              //   return previousResult
-              // }
-              //
-              // return {
-              //   skip: {
-              //     dishes: {
-              //       __typename: previousResult.skip.dishes.__typename,
-              //       edges: [...previousResult.skip.dishes.edges, ...newEdges],
-              //       pageInfo,
-              //     },
-              //     __typename: previousResult.skip.__typename,
-              //   },
-              // }
-
-              if (!fetchMoreResult) return previousResult
-
-              fetchMoreResult.skip.dishes.edges = [
-                ...previousResult.skip.dishes.edges,
-                ...fetchMoreResult.skip.dishes.edges,
-              ]
-
-              return fetchMoreResult
-            },
+            updateQuery: updateQuery,
           })
-        }
+        }}
         onEndReachedThreshold={0.1}
-        // maxToRenderPerBatch={100}
-        // updateCellsBatchingPeriod={10}
-        // windowSize={100}
+        ListFooterComponent={loading || <ActivityIndicator size="large" color="#0000ff" />}
       />
     </View>
   )
+}
+
+const renderItem = ({ item }) => <CardDish key={item.node.id} dish={item.node} />
+
+const updateQuery = (previousResult, { fetchMoreResult }) => {
+  if (!fetchMoreResult) return previousResult
+
+  fetchMoreResult.skip.dishes.edges = [
+    ...previousResult.skip.dishes.edges,
+    ...fetchMoreResult.skip.dishes.edges,
+  ]
+
+  return fetchMoreResult
 }
 
 DishList.propTypes = {
