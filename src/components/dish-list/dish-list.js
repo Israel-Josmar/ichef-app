@@ -20,24 +20,19 @@ import { gql } from 'apollo-boost'
 
 const QUERY_DISHES = gql`
   query GetDishes($after: String) {
-    skip: project(fullPath: "gitlab-org/gitlab") {
-      dishes: issues(first: 5, after: $after) {
-        pageInfo {
-          endCursor
-          hasNextPage
-        }
-        edges {
-          cursor
-          node {
-            id: iid
-            name: title
-            category: state
-            skip: author {
-              name
-              imageUrl: avatarUrl
-            }
-            description
-          }
+    dishes(first: 5, after: $after) {
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          category
+          imageUrl
+          description
         }
       }
     }
@@ -49,7 +44,7 @@ const DishList = props => {
   const [searchQuery, setSearchQuery] = useState(null)
   const [showSearch, setShowSearch] = useState(null)
   const { loading, error, data, fetchMore } = useQuery(QUERY_DISHES)
-  const endCursor = data && data.skip && data.skip.dishes.pageInfo.endCursor
+  const endCursor = data && data.dishes && data.dishes.pageInfo.endCursor
 
   if (loading)
     return (
@@ -80,7 +75,7 @@ const DishList = props => {
       />
       <FlatList
         keyExtractor={item => item.node.id}
-        data={data.skip.dishes.edges}
+        data={data.dishes.edges}
         renderItem={renderItem}
         onEndReached={() => {
           return fetchMore({
@@ -103,10 +98,7 @@ const renderItem = ({ item }) => <CardDish key={item.node.id} dish={item.node} /
 const updateQuery = (previousResult, { fetchMoreResult }) => {
   if (!fetchMoreResult) return previousResult
 
-  fetchMoreResult.skip.dishes.edges = [
-    ...previousResult.skip.dishes.edges,
-    ...fetchMoreResult.skip.dishes.edges,
-  ]
+  fetchMoreResult.dishes.edges = [...previousResult.dishes.edges, ...fetchMoreResult.dishes.edges]
 
   return fetchMoreResult
 }

@@ -7,7 +7,7 @@ import App from './src/App'
 import { name as appName } from './app.json'
 
 const client = new ApolloClient({
-  uri: 'https://gitlab.com/api/graphql',
+  uri: 'http://10.0.2.2:4000/graphql',
 })
 
 const connectedApp = () => (

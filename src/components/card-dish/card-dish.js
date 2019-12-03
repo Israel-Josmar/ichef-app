@@ -13,15 +13,7 @@ const theme = {
   },
 }
 
-const CardDish = ({
-  dish: {
-    id,
-    name,
-    category,
-    skip: { imageUrl },
-    description,
-  },
-}) => {
+const CardDish = ({ dish: { id, name, category, imageUrl, description } }) => {
   return (
     <View style={styles.container}>
       <Card>
